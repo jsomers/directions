@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100717053911) do
+ActiveRecord::Schema.define(:version => 20100717212738) do
 
   create_table "cities", :force => true do |t|
     t.string   "city",       :null => false
@@ -18,6 +18,19 @@ ActiveRecord::Schema.define(:version => 20100717053911) do
     t.float    "longitude",  :null => false
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
+  end
+
+  create_table "routes", :force => true do |t|
+    t.string   "start_city",  :null => false
+    t.string   "start_state", :null => false
+    t.string   "end_city",    :null => false
+    t.string   "end_state",   :null => false
+    t.float    "start_lat",   :null => false
+    t.float    "start_long",  :null => false
+    t.float    "end_lat",     :null => false
+    t.float    "end_long",    :null => false
+    t.datetime "created_at",  :null => false
+    t.datetime "updated_at",  :null => false
   end
 
 end

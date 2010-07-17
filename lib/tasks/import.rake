@@ -12,4 +12,12 @@ namespace :import do
       )
     end
   end
+  
+  task :initial_routes => :environment do
+    raw = File.open("#{RAILS_ROOT}/lib/initial_routes.txt", "r").read
+    lines = raw.split("\n")
+    lines.each do |line|
+      
+    end
+  end
 end
