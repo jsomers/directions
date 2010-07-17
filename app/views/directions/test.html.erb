@@ -1,0 +1,131 @@
+<script type="text/javascript">
+	var map;
+	var directionDisplay;
+	var directionsService;
+	var stepDisplay;
+	var markerArray = [];
+	var step_counts = [];
+	var step_summaries = [];
+
+	function initialize() {
+	  // Instantiate a directions service.
+	  directionsService = new google.maps.DirectionsService();
+	}
+
+	function calcRoute(start, end) {
+	  // Retrieve the start and end locations and create
+	  // a DirectionsRequest using DRIVING directions.
+	  var city_start = [start[2], start[3]].join(", ");
+	  var city_end = [end[2], end[3]].join(", ");
+	  var latlong_start = [start[0], start[1]].join(",");
+	  var latlong_end = [end[0], end[1]].join(",");
+	  var request = {
+	      origin: latlong_start,
+	      destination: latlong_end,
+	      travelMode: google.maps.DirectionsTravelMode.DRIVING
+	  };
+
+	  // Route the directions and pass the response to a
+	  // function to count the number of returned steps.
+	  directionsService.route(request, function(response, status) {
+	    if (status == google.maps.DirectionsStatus.OK) {
+		  var step_ct = countSteps(response);
+		  step_counts.push(step_ct);
+		  step_summaries.push([step_ct, city_start, city_end])
+	    } else {
+		  console.warn("Couldn't count steps for this route.");
+		}
+	  });
+	}
+	
+	function countSteps(directionResult) {
+		var myRoute = directionResult.routes[0].legs[0];
+		return myRoute.steps.length;
+	}
+	
+	function getAndExecutePairs(n) {
+		$.get("/directions/get_pairs", {n: n},
+			function(ret) {
+				pairs = ret;
+				console.log(n + " lat/long pairs downloaded successfully.");
+				execute(pairs);
+			}
+		)
+	}
+	
+	function execute(pairs) {
+		for (i = 0; i < pairs.length; i++) {
+			pair = pairs[i];
+			start = pair[0];
+			end = pair[1];
+			calcRoute(start, end);
+		}
+	}
+	
+	function summarize() {
+		$("#route_count").html(step_counts.length);
+		$("#avg").html(step_counts.avg().toFixed(2));
+		$("#max").html(step_counts.max());
+		$("#results").show();
+		for (i = 0; i < step_summaries.length; i++) {
+			step = step_summaries[i];
+			$li = $("#seed").clone();
+			$li.find(".start").html(step[1]);
+			$li.find(".end").html(step[2]);
+			$li.find(".steps").html(step[0]);
+			$li.show();
+			$li.appendTo("#step_summaries");
+		}
+	}
+	
+	Array.prototype.avg = function() {
+		var av = 0;
+		var cnt = 0;
+		var len = this.length;
+		for (var i = 0; i < len; i++) {
+			var e = +this[i];
+			if(!e && this[i] !== 0 && this[i] !== '0') e--;
+			if (this[i] == e) {av += e; cnt++;}
+		}
+		return av/cnt;
+	};
+	
+	Array.prototype.max = function() {
+		var max = this[0];
+		var len = this.length;
+		for (var i = 1; i < len; i++) if (this[i] > max) max = this[i];
+		return max;
+	}
+	
+	$(document).ready(function() {
+		initialize();
+		
+		$("#run").click(function() {
+			ct = parseFloat($("#count").val());
+			getAndExecutePairs(ct);
+		});
+		
+		$("#summary").click(function() {
+			summarize();
+		})
+	})
+</script>
+
+<h1>Exploring Point-to-Point Directions in the United States</h1>
+
+<ol>
+	<li>Google maps gives you a list of step-by-step directions when you submit a query. Choose two points in the contiguous United States such that the number of steps Google gives you is greater than for any other two points. How many steps would that be? What features would the two points have&mdash;would they be remote towns, cities with lots of one-way streets, etc.? Where would they be?</li>
+	<li>What is the average number of steps for <em>every</em> point-to-point query in the United States?</li>
+</ol>
+
+<input type="text" id="count"/>
+<input type="submit" value="Run query" id="run"/>
+<input type="submit" value="Summarize results" id="summary"/>
+
+<div id="results" style="display: none; margin-top: 50px; font-size: 30px;">
+	For <span id="route_count" style="font-weight: bold;">23</span> routes, Google gives <span id="avg" style="font-weight: bold;">19.21</span> steps on average. The maximum number of steps it gave was <span id="max" style="font-weight: bold;">51</span>.
+</div>
+
+<ol id="step_summaries">
+	<li id="seed" style="display: none;">The route from <strong><span class="start">Summit, NJ</strong> to <strong><span class="end">New York, NY</span></strong> has <strong><span class="steps">21</span></strong> steps.</li>
+</ol>
