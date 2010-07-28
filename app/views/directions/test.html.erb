@@ -78,6 +78,14 @@
 		}
 	}
 	
+	function upload(summary) {
+		$.post("/directions/upload_summary", {summary: summary},
+			function(ret) {
+				console.log(ret);
+			}
+		)
+	}
+	
 	Array.prototype.avg = function() {
 		var av = 0;
 		var cnt = 0;
